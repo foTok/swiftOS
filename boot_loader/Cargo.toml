@@ -1,0 +1,10 @@
+[package]
+name = "boot_loader"
+version = "0.1.0"
+authors = ["f"]
+edition = "2018"
+
+[lib]
+crate-type = ["staticlib"]
+
+[dependencies]

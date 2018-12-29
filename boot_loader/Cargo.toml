@@ -7,4 +7,20 @@ edition = "2018"
 [lib]
 crate-type = ["staticlib"]
 
+[profile.dev]
+panic = "abort"
+lto = true
+debug = true
+
+[profile.test]
+panic = "abort"
+lto = true
+debug = true
+
+[profile.release]
+panic = "abort"
+lto = true
+debug = true
+
+
 [dependencies]

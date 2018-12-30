@@ -1,8 +1,8 @@
 use core::marker::PhantomData;
 
-use common::{IO_BASE, states};
-use volatile::prelude::*;
-use volatile::{Volatile, WriteVolatile, ReadVolatile, Reserved};
+use crate::common::{IO_BASE, states};
+use crate::volatile::prelude::*;
+use crate::volatile::{Volatile, WriteVolatile, ReadVolatile, Reserved};
 
 /// An alternative GPIO function.
 #[repr(u8)]
@@ -102,7 +102,17 @@ impl Gpio<Uninitialized> {
     /// Enables the alternative function `function` for `self`. Consumes self
     /// and returns a `Gpio` structure in the `Alt` state.
     pub fn into_alt(self, function: Function) -> Gpio<Alt> {
-        unimplemented!()
+        let function = function as u32;
+        let register_offset: usize = self.pin as usize / 10;
+        let gpio_offset: u8 = self.pin % 10;
+        let current = self.registers.FSEL[register_offset].read();
+        let after_set = (current | (function<<(3*gpio_offset)))  & (!((7-function)<<(3*gpio_offset)));
+        self.registers.FSEL[register_offset].write(after_set);
+        Gpio::<Alt>{
+            pin: self.pin,
+            registers: self.registers,
+            _state: PhantomData
+        }
     }
 
     /// Sets this pin to be an _output_ pin. Consumes self and returns a `Gpio`
@@ -121,12 +131,16 @@ impl Gpio<Uninitialized> {
 impl Gpio<Output> {
     /// Sets (turns on) the pin.
     pub fn set(&mut self) {
-        unimplemented!()
+        let register_offset: usize = self.pin as usize / 32;
+        let gpio_offset: u8 = self.pin % 32;
+        self.registers.SET[register_offset].write(1<<gpio_offset);
     }
 
     /// Clears (turns off) the pin.
     pub fn clear(&mut self) {
-        unimplemented!()
+        let register_offset: usize = self.pin as usize / 32;
+        let gpio_offset: u8 = self.pin % 32;
+        self.registers.CLR[register_offset].write(1<<gpio_offset);
     }
 }
 
@@ -134,6 +148,9 @@ impl Gpio<Input> {
     /// Reads the pin's value. Returns `true` if the level is high and `false`
     /// if the level is low.
     pub fn level(&mut self) -> bool {
-        unimplemented!()
+        let register_offset: usize = self.pin as usize / 32;
+        let gpio_offset: u8 = self.pin % 32;
+        let current = self.registers.LEV[register_offset].read();
+        (current & (1<<gpio_offset)) != 0
     }
 }

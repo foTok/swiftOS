@@ -1,4 +1,4 @@
-use traits::*;
+use crate::traits::*;
 
 #[doc(hidden)]
 pub(crate) macro ptr($type:ident, |$self:ident| $f:expr) {

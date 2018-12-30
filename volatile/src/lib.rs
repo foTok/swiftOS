@@ -1,6 +1,6 @@
 #![feature(decl_macro)]
 #![feature(optin_builtin_traits)]
-
+#![feature(uniform_paths)]
 #![no_std]
 
 mod traits;

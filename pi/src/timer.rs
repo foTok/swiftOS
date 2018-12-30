@@ -1,4 +1,4 @@
-use common::IO_BASE;
+use crate::common::IO_BASE;
 use volatile::prelude::*;
 use volatile::{Volatile, ReadVolatile};
 
@@ -30,21 +30,39 @@ impl Timer {
     /// Reads the system timer's counter and returns the 64-bit counter value.
     /// The returned value is the number of elapsed microseconds.
     pub fn read(&self) -> u64 {
-        unimplemented!()
+        let clo = self.registers.CLO.read() as u64;
+        let mut chi = self.registers.CHI.read() as u64;
+        (chi<<32)+clo
     }
 }
 
 /// Returns the current time in microseconds.
 pub fn current_time() -> u64 {
-    unimplemented!()
+    let tm = Timer::new();
+    tm.read()
 }
 
 /// Spins until `us` microseconds have passed.
 pub fn spin_sleep_us(us: u64) {
-    unimplemented!()
+    let tm = Timer::new();
+    let t0 = tm.read();
+    loop{
+        let t1 = tm.read();
+        if (t1 - t0)>=us{
+            break;
+        }
+    }
 }
 
 /// Spins until `ms` milliseconds have passed.
 pub fn spin_sleep_ms(ms: u64) {
-    unimplemented!()
+    let tm = Timer::new();
+    let t0 = tm.read();
+    let us = ms*1000;
+    loop{
+        let t1 = tm.read();
+        if (t1 - t0)>=us{
+            break;
+        }
+    }
 }

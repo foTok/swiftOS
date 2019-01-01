@@ -1,9 +1,0 @@
-[workspace]
-members = [
-    "boot_loader",
-    "pi",
-    "stack-vec",
-    "ttywrite",
-    "volatile",
-    "xmodem"
-]

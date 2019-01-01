@@ -31,7 +31,7 @@ impl Timer {
     /// The returned value is the number of elapsed microseconds.
     pub fn read(&self) -> u64 {
         let clo = self.registers.CLO.read() as u64;
-        let mut chi = self.registers.CHI.read() as u64;
+        let chi = self.registers.CHI.read() as u64;
         (chi<<32)+clo
     }
 }

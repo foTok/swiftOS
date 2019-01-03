@@ -1,5 +1,4 @@
 use core::prelude::v1::*;
-use core::marker::*;
 
 mod traits;
 mod macros;

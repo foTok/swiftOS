@@ -1,13 +1,14 @@
-use std::io;
+use core::Result;
+use io::ErrorKind;
 
-pub trait ReadExt: io::Read {
-    fn read_max(&mut self, mut buf: &mut [u8]) -> io::Result<usize> {
+pub trait ReadExt{
+    fn read_max(&mut self, mut buf: &mut [u8]) -> Result<usize,()> {
         let start_len = buf.len();
         while !buf.is_empty() {
             match self.read(buf) {
                 Ok(0) => break,
                 Ok(n) => { let tmp = buf; buf = &mut tmp[n..]; }
-                Err(ref e) if e.kind() == io::ErrorKind::Interrupted => {}
+                Err(ref e) if e.kind() == ErrorKind::Interrupted => {}
                 Err(e) => return Err(e),
             }
         }
@@ -16,4 +17,4 @@ pub trait ReadExt: io::Read {
     }
 }
 
-impl<T: io::Read> ReadExt for T {  }
+impl<T> ReadExt for T {  }

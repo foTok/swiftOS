@@ -1,11 +1,4 @@
-use core::marker::*;
-/// Enum representing how much progress has been made transmitting/receiving.
-///
-/// A value of this type is passed in to the progress callback supplied to
-/// methods like [`Xmodem::transmit_with_progress()`],
-/// [`Xmodem::receive_with_progress()`], and [`Xmodem::new_with_progress()`]. It
-/// is intended to be used by progress indicators or for debugging purposes.
-
+use core::marker::{Copy, Clone}
 pub enum Progress {
     /// Waiting for receiver to send NAK.
     Waiting,
@@ -14,6 +7,18 @@ pub enum Progress {
     /// Packet `.0` was transmitted/received.
     Packet(u8),
 }
+
+impl Clone for Progress {
+    fn clone(&self) -> Progress{
+        match self {
+            Progress::Waiting => Progress::Waiting,
+            Progress::Started => Progress::Started,
+            Progress::Packet(id) => Progress::Packet(id),
+        }
+    }
+}
+
+impl Copy for Progress {}
 
 /// Type for progress callbacks.
 pub type ProgressFn = fn(Progress);

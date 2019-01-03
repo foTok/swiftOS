@@ -1,5 +1,3 @@
-use core::prelude::v1::*;
-use core::marker::*;
 use core::ops::{Deref, DerefMut};
 
 /// A contiguous array type backed by a slice.
@@ -126,7 +124,6 @@ impl<'a, T: Clone + 'a> StackVec<'a, T> {
     }
 }
 
-// FIXME: Implement `Deref`, `DerefMut`, and `IntoIterator` for `StackVec`.
 impl<'a, T: 'a> Deref for StackVec<'a, T> {
     type Target = [T];
 
@@ -150,7 +147,6 @@ impl<'a, T: 'a> IntoIterator for StackVec<'a, T> {
     }
 }
 
- // FIXME: Implement IntoIterator` for `&StackVec`.
 impl<'a, T: 'a> IntoIterator for &'a StackVec<'a, T> {
     type Item = &'a T;
     type IntoIter = ::core::slice::Iter<'a, T>;

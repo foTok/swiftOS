@@ -19,24 +19,14 @@ impl Console {
     /// Initializes the console if it's not already initialized.
     #[inline]
     fn initialize(&mut self) {
-        match self.inner{
-            None => {
-                self.inner = Some(MiniUart::new());
-            }
-            _ => {}
-        }
+        self.inner.get_or_insert_with(&MiniUart::new);
     }
 
     /// Returns a mutable borrow to the inner `MiniUart`, initializing it as
     /// needed.
     fn inner(&mut self) -> &mut MiniUart {
         self.initialize();
-        match self.inner(){
-            Some(mut ref uart) => {
-                uart
-            }
-            _ => { panic(); }
-        }
+        self.inner.as_mut().unwrap()
     }
 
     /// Reads a byte from the UART device, blocking until a byte is available.
@@ -46,7 +36,7 @@ impl Console {
 
     /// Writes the byte `byte` to the UART device.
     pub fn write_byte(&mut self, byte: u8) {
-        self.inner().write_byte(byte);
+        self.inner().write_byte(byte)
     }
 }
 
@@ -68,7 +58,7 @@ impl io::Write for Console {
 
 impl fmt::Write for Console {
     fn write_str(&mut self, s: &str) -> fmt::Result {
-        self.write_fmt(s)
+        self.inner().write_str(s)
     }
 }
 

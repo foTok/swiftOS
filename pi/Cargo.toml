@@ -6,3 +6,7 @@ edition = "2018"
 
 [dependencies]
 volatile = { path = "../volatile" }
+std = { path = "../std" }
+
+[features]
+std = []

@@ -1,13 +1,11 @@
-#![feature(decl_macro)]
-#![feature(optin_builtin_traits)]
-#![feature(uniform_paths)]
-#![no_std]
+use core::prelude::v1::*;
+use core::marker::*;
 
 mod traits;
 mod macros;
 
-pub use traits::*;
-use macros::*;
+pub use crate::volatile::traits::*;
+use crate::volatile::macros::*;
 
 /// Reexports all of the traits in this crate.
 ///
@@ -49,7 +47,6 @@ pub struct Reserved<T>(T);
 /// `Sync` is implemented if the wrapper wrapper type's generic is `T: Sync`.
 /// For instance, a type of `Unique<Volatile<T>>` is `Sync` if `T` is `Sync`.
 #[repr(C)]
-#[derive(Debug)]
 pub struct Unique<T>(T);
 
 // Implementations for `ReadVolatile`.

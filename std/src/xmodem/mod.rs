@@ -1,8 +1,5 @@
-#![feature(uniform_paths)]
-
 use std::io;
 
-#[cfg(test)] mod tests;
 mod read_ext;
 mod progress;
 

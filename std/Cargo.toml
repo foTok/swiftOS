@@ -1,5 +1,5 @@
 [package]
-name = "xmodem"
+name = "std"
 version = "0.1.0"
 authors = ["f"]
 edition = "2018"

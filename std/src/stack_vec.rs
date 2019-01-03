@@ -1,10 +1,6 @@
-#![cfg_attr(test, feature(inclusive_range_syntax))]
-#![no_std]
-
+use core::prelude::v1::*;
+use core::marker::*;
 use core::ops::{Deref, DerefMut};
-
-#[cfg(test)]
-mod tests;
 
 /// A contiguous array type backed by a slice.
 ///
@@ -14,7 +10,6 @@ mod tests;
 /// result, `StackVec`'s capacity is _bounded_ by the user-supplied slice. This
 /// results in `push` being fallible: if `push` is called when the vector is
 /// full, an `Err` is returned.
-#[derive(Debug)]
 pub struct StackVec<'a, T: 'a> {
     storage: &'a mut [T],
     len: usize

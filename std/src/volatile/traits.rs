@@ -1,3 +1,4 @@
+use core::prelude::v1::*;
 /// Trait implemented by all of the wrapper types in this crate.
 ///
 /// The inner type of wrapper is specified as an associated constant `Inner`.

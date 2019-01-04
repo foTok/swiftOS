@@ -93,7 +93,7 @@ impl MiniUart {
 
 
 impl Read for MiniUart {
-    fn read_byte(&mut self) -> Result<u8, ErrorKind>{
+    fn read_byte(& self) -> Result<u8, ErrorKind>{
         match self.timeout {
             Some(timeout) => {
                 let t0 = timer::current_time();

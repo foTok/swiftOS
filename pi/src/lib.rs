@@ -5,7 +5,6 @@
 #![feature(never_type)]
 #![no_std]
 
-extern crate core;
 use std::*;
 
 pub mod timer;

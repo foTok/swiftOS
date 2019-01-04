@@ -22,9 +22,6 @@ pub struct Xmodem<R> {
 }
 
 impl Xmodem<()> {
-    
-    // Transmit Data
-
     /// Read data from *ds* and send the data by *port*.
     /// If transmit successfully, return the byte number.
     /// Else, return Err(())

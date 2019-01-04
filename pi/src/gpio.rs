@@ -1,5 +1,12 @@
-use core::marker::PhantomData;
+/// examples
+/// 
+/// let mut gpio16 = gpio::Gpio::new(16).into_output();
+/// gpio16.set();
+/// timer::spin_sleep_ms(100);
+/// gpio16.clear();
+/// timer::spin_sleep_ms(100);
 
+use core::marker::PhantomData;
 use crate::common::{IO_BASE, states};
 use crate::volatile::prelude::*;
 use crate::volatile::{Volatile, WriteVolatile, ReadVolatile, Reserved};

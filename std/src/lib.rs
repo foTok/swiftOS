@@ -7,3 +7,4 @@ pub mod io;
 pub mod stack_vec;
 pub mod volatile;
 pub mod xmodem;
+pub mod mutex;

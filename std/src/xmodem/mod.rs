@@ -1,11 +1,9 @@
 mod read_ext;
 mod progress;
 
-use core::Result;
-use core::Result::{Ok, Err};
-use io::Read;
-use io::Write;
-use io::ErrorKind;
+use crate::io::Read;
+use crate::io::Write;
+use crate::io::ErrorKind;
 use read_ext::ReadExt;
 use progress::*;
 
@@ -31,15 +29,15 @@ impl Xmodem<()> {
     /// If transmit successfully, return the byte number.
     /// Else, return Err(())
     #[inline]
-    pub fn transmit(ds: R, port: W) -> Result<usize, ErrorKind> 
+    pub fn transmit<R, W>(ds: R, port: W) -> Result<usize, ErrorKind> 
         where R: Read,
               W: Read + Write
     {
-        Xmodem::transmit_with_progress(data, to, progress::noop)
+        Xmodem::transmit_with_progress(ds, port, progress::noop)
     }
 
     #[inline]
-    pub fn transmit_with_process<R, TX>(ds: R, port: W, f: ProgressFn) -> Result<usize, ErrorKind> 
+    pub fn transmit_with_progress<R, W>(mut ds: R, port: W, f: ProgressFn) -> Result<usize, ErrorKind> 
         where R: Read,
               W: Read + Write
     {
@@ -47,7 +45,7 @@ impl Xmodem<()> {
         let mut packet = [0u8; 128];
         let mut written = 0;
         'next_packet: loop {
-            let n = data.read_max(&mut packet)?;
+            let n = ds.read_max(&mut packet)?;
             packet[n..].iter_mut().for_each(|b| *b = 0);
 
             if n == 0 {
@@ -57,8 +55,12 @@ impl Xmodem<()> {
 
             for _ in 0..10 {
                 match transmitter.write_packet(&packet) {
-                    Err(ref e) if e == ErrorKind::Interrupted => continue,
-                    Err(e) => return Err(e),
+                    Err(e) => {
+                        match e {
+                            ErrorKind::Interrupted => continue,
+                            _ => return Err(e),
+                        }
+                    },
                     Ok(_) => {
                         written += n;
                         continue 'next_packet;
@@ -66,7 +68,7 @@ impl Xmodem<()> {
                 }
             }
 
-            return Err(io::Error::new(io::ErrorKind::BrokenPipe, "bad transmit"));
+            return Err(ErrorKind::BrokenPipe);
         }
     }
 
@@ -85,7 +87,7 @@ impl Xmodem<()> {
     ///
     /// The function `f` is used as a callback to indicate progress throughout
     /// the reception. See the [`Progress`] enum for more information.
-    pub fn receive_with_progress<R, W>(port: R, mut into: W, f: ProgressFn) -> io::Result<usize, ErrorKind>
+    pub fn receive_with_progress<R, W>(port: R, mut into: W, f: ProgressFn) -> Result<usize, ErrorKind>
        where R: Read + Write, 
              W: Write
     {
@@ -95,8 +97,12 @@ impl Xmodem<()> {
         'next_packet: loop {
             for _ in 0..10 {
                 match receiver.read_packet(&mut packet) {
-                    Err(ref e) if e == ErrorKind::Interrupted => continue,
-                    Err(e) => return Err(e),
+                    Err(e) => {
+                        match e {
+                            ErrorKind::Interrupted => continue,
+                            _ => return Err(e),
+                        }
+                    },
                     Ok(0) => break 'next_packet,
                     Ok(n) => {
                         received += n;
@@ -136,7 +142,7 @@ impl<T:Read + Write> Xmodem<T> {
         let byte = self.inner.read_byte()?;
 
         if abort_on_can && byte == CAN {
-            return Err(ConnectionAborted);
+            return Err(ErrorKind::ConnectionAborted);
         }
 
         Ok(byte)
@@ -159,7 +165,7 @@ impl<T:Read + Write> Xmodem<T> {
     /// Returns an error if reading from the inner stream fails, if the read
     /// byte was not `byte`, if the read byte was `CAN` and `byte` is not `CAN`,
     /// or if writing the `CAN` byte failed on byte mismatch.
-    fn expect_byte_or_cancel(&mut self, byte: u8) -> io::Result<u8, ErrorKind> {
+    fn expect_byte_or_cancel(&mut self, byte: u8) -> Result<u8, ErrorKind> {
         let byte_read = self.read_byte(false)?;
         if byte_read==byte {
             return Ok(byte);
@@ -186,7 +192,7 @@ impl<T:Read + Write> Xmodem<T> {
     /// byte was not `byte`. If the read byte differed and was `CAN`, an error
     /// of `ConnectionAborted` is returned. Otherwise, the error kind is
     /// `InvalidData`.
-    fn expect_byte(&mut self, byte: u8) -> io::Result<u8, ErrorKind> {
+    fn expect_byte(&mut self, byte: u8) -> Result<u8, ErrorKind> {
         let byte_read = self.read_byte(false)?;
         if byte_read==byte {
             return Ok(byte);
@@ -225,7 +231,7 @@ impl<T:Read + Write> Xmodem<T> {
     /// received when not expected.
     ///
     /// An error of kind `UnexpectedEof` is returned if `buf.len() < 128`.
-    pub fn read_packet(&mut self, buf: &mut [u8]) -> Result<usize, Error> {
+    pub fn read_packet(&mut self, buf: &mut [u8]) -> Result<usize, ErrorKind> {
         // check buf
         if buf.len() < 128 {
             return Err(ErrorKind::UnexpectedEof);

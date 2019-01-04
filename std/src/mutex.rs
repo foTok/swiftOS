@@ -1,6 +1,6 @@
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::cell::UnsafeCell;
-use std::ops::{DerefMut, Deref, Drop};
+use core::sync::atomic::{AtomicBool, Ordering};
+use core::cell::UnsafeCell;
+use core::ops::{DerefMut, Deref, Drop};
 
 #[repr(align(32))]
 pub struct Mutex<T> {

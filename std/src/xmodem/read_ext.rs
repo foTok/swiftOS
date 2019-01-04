@@ -1,15 +1,19 @@
-use core::Result;
-use io::ErrorKind;
+use crate::io::ErrorKind;
+use crate::io::Read;
 
-pub trait ReadExt{
-    fn read_max(&mut self, mut buf: &mut [u8]) -> Result<usize,()> {
+pub trait ReadExt: Read{
+    fn read_max(&mut self, mut buf: &mut [u8]) -> Result<usize,ErrorKind> {
         let start_len = buf.len();
         while !buf.is_empty() {
             match self.read(buf) {
                 Ok(0) => break,
                 Ok(n) => { let tmp = buf; buf = &mut tmp[n..]; }
-                Err(ref e) if e.kind() == ErrorKind::Interrupted => {}
-                Err(e) => return Err(e),
+                Err(e) => {
+                    match e {
+                        ErrorKind::Interrupted => {},
+                        _ => return Err(e),
+                    }
+                }
             }
         }
 
@@ -17,4 +21,4 @@ pub trait ReadExt{
     }
 }
 
-impl<T> ReadExt for T {  }
+impl<T: Read> ReadExt for T {  }

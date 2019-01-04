@@ -1,6 +1,3 @@
-use core::Result;
-use core::Option;
-
 /// io Error Kind
 pub enum ErrorKind {
     NotFound,
@@ -28,12 +25,24 @@ pub enum ErrorKind {
 pub trait Read {
     fn read_byte(&mut self) -> Result<u8, ErrorKind>;
 
-    fn read(&mut self, buf: &mut [u8]) -> Result<usize, ErrorKind>;
+    fn read(&mut self, buf: &mut [u8]) -> Result<usize, ErrorKind>{
+        let n = buf.len();
+        for byte in buf{
+            *byte = self.read_byte()?;
+        }
+        Ok(n)
+    }
 }
 
 /// Write Trait
 pub trait Write {
     fn write_byte(&mut self, byte: u8) -> Result<u8, ErrorKind>;
 
-    fn write(&mut self, buf: & [u8]) -> Result<usize, ErrorKind>;
+    fn write(&mut self, buf: & [u8]) -> Result<usize, ErrorKind>{
+        let n = buf.len();
+        for byte in buf{
+            self.write_byte(*byte)?;
+        }
+        Ok(n)
+    }
 }

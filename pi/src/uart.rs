@@ -1,15 +1,11 @@
-use core::fmt;
-
-use volatile::prelude::*;
-use volatile::{Volatile, ReadVolatile, Reserved};
-
 use crate::timer;
 use crate::common::IO_BASE;
 use crate::gpio::{Gpio, Function};
+use std::io::*;
+use std::volatile::*;
 
 /// The base address for the `MU` registers.
 const MU_REG_BASE: usize = IO_BASE + 0x215040;
-
 /// The `AUXENB` register from page 9 of the BCM2837 documentation.
 const AUX_ENABLES: *mut Volatile<u8> = (IO_BASE + 0x215004) as *mut Volatile<u8>;
 
@@ -41,11 +37,8 @@ struct Registers {
     _r7: [Reserved<u8>; 3],
     MU_CNTL: Volatile<u8>,
     _r8: [Reserved<u8>; 3],
-    MU_STAT_s: ReadVolatile<u16>,
-    MU_STAT_rf: ReadVolatile<u8>,
-    MU_STAT_tf: ReadVolatile<u8>,
+    MU_STAT: ReadVolatile<u32>,
     MU_BAUD: Volatile<u16>,
-    _r9: Reserved<u16>
 }
 
 /// The Raspberry Pi's "mini UART".
@@ -55,13 +48,6 @@ pub struct MiniUart {
 }
 
 impl MiniUart {
-    /// Initializes the mini UART by enabling it as an auxiliary peripheral,
-    /// setting the data size to 8 bits, setting the BAUD rate to ~115200 (baud
-    /// divider of 270), setting GPIO pins 14 and 15 to alternative function 5
-    /// (TXD1/RDXD1), and finally enabling the UART transmitter and receiver.
-    ///
-    /// By default, reads will never time out. To set a read timeout, use
-    /// `set_read_timeout()`.
     pub fn new() -> MiniUart {
         let registers = unsafe {
             // Enable the mini UART as an auxiliary device.
@@ -90,62 +76,72 @@ impl MiniUart {
         self.timeout = Some(milliseconds);
     }
 
-    /// Write the byte `byte`. This method blocks until there is space available
-    /// in the output FIFO.
-    pub fn write_byte(&mut self, byte: u8) {
-        loop{
-            if self.registers.MU_LSR.has_mask(LsrStatus::TxAvailable as u8){
-                break;
-            }
-        }
-        self.registers.MU_IO.write(byte);
-    }
-
-    /// Returns `true` if there is at least one byte ready to be read. If this
-    /// method returns `true`, a subsequent call to `read_byte` is guaranteed to
-    /// return immediately. This method does not block.
+    /// Returns `true` if there is at least one byte ready to be read.
     pub fn has_byte(&self) -> bool {
         self.registers.MU_LSR.has_mask(LsrStatus::DataReady as u8)
     }
 
-    /// Blocks until there is a byte ready to read. If a read timeout is set,
-    /// this method blocks for at most that amount of time. Otherwise, this
-    /// method blocks indefinitely until there is a byte to read.
-    ///
-    /// Returns `Ok(())` if a byte is ready to read. Returns `Err(())` if the
-    /// timeout expired while waiting for a byte to be ready. If this method
-    /// returns `Ok(())`, a subsequent call to `read_byte` is guaranteed to
-    /// return immediately.
-    pub fn wait_for_byte(&self) -> Result<(), ()> {
+    /// Do nothing. Stop when there is at least one byte to read.
+    pub fn wait_for_byte(&self) {
+        loop {
+            if self.has_byte(){
+                break;
+            }
+        }
+    }
+}
+
+
+impl Read for MiniUart {
+    fn read_byte(&mut self) -> Result<u8, ErrorKind>{
         match self.timeout {
-            None => {
-                loop {
+            Some(timeout) => {
+                let t0 = timer::current_time();
+                loop{
                     if self.has_byte(){
-                        return Ok(());
+                        return Ok(self.registers.MU_IO.read());
+                    }
+                    let t1 = timer::current_time();
+                    if t1 - t0 > (timeout as u64) * 1000{
+                        return Err(ErrorKind::TimedOut);
                     }
                 }
             },
-            Some(timeout) => {
-                let t0 = timer::current_time();
-                loop {
+            None => {
+                loop{
                     if self.has_byte(){
-                        return Ok(());
-                    }
-                    let t1 = timer::current_time();
-                    if t1 - t0 > (timeout as u64)*1000 {
-                        return Err(());
+                        return Ok(self.registers.MU_IO.read());
                     }
                 }
             }
         }
     }
+}
 
-    /// Reads a byte. Blocks indefinitely until a byte is ready to be read.
-    pub fn read_byte(&mut self) -> u8 {
-        loop{
-            if self.has_byte(){
-                return self.registers.MU_IO.read();
+impl Write for MiniUart {
+    fn write_byte(&mut self, byte: u8) -> Result<u8, ErrorKind>{
+        match self.timeout {
+            Some(timeout) => {
+                let t0 = timer::current_time();
+                loop{
+                    if self.registers.MU_LSR.has_mask(LsrStatus::TxAvailable as u8){
+                        break;
+                    }
+                    let t1 = timer::current_time();
+                    if t1-t0 > (timeout as u64) * 1000{
+                        return Err(ErrorKind::TimedOut);
+                    }
+                }
+            },
+            None => {
+                loop{
+                    if self.registers.MU_LSR.has_mask(LsrStatus::TxAvailable as u8){
+                        break;
+                    }
+                }
             }
         }
+        self.registers.MU_IO.write(byte);
+        Ok(byte)
     }
 }

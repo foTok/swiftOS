@@ -1,4 +1,4 @@
-use core::marker::{Copy, Clone}
+#[derive(Debug)]
 pub enum Progress {
     /// Waiting for receiver to send NAK.
     Waiting,
@@ -13,7 +13,7 @@ impl Clone for Progress {
         match self {
             Progress::Waiting => Progress::Waiting,
             Progress::Started => Progress::Started,
-            Progress::Packet(id) => Progress::Packet(id),
+            Progress::Packet(id) => Progress::Packet(*id),
         }
     }
 }

@@ -24,5 +24,4 @@ debug = true
 
 
 [dependencies]
-#pi = { path = "../pi", features = ["std"] }
-#stack-vec = { path = "../stack-vec/" }
+pi = { path = "../pi"}

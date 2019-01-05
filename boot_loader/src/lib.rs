@@ -10,6 +10,8 @@ use pi::uart;
 use pi::gpio;
 use std::io::*;
 
+mod mem;
+
 #[panic_handler]
 fn panic(_info: &PanicInfo) -> !{
     loop {}
@@ -36,6 +38,8 @@ pub unsafe extern "C" fn kmain() {
 
     // open a uart to recieve new data
     let mut shell_uart = uart::MiniUart::new();
+    // mem write
+    let mut mem_write = mem::MemWrite::new(BINARY_START_ADDR, BOOTLOADER_START_ADDR);
 
     loop {
         shell_uart.wait_for_byte();

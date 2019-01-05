@@ -1,8 +1,9 @@
-extern crate serial;
-extern crate structopt;
-extern crate xmodem;
+#![feature(uniform_paths)]
 #[macro_use] extern crate structopt_derive;
 
+mod xmodem;
+
+use std::time::Instant;
 use std::path::PathBuf;
 use std::time::Duration;
 
@@ -47,6 +48,28 @@ struct Opt {
     raw: bool,
 }
 
+fn progress_fn(_progress: Progress) {
+    static mut LAST_TIME: Option<Instant> = None;
+    static mut BYTES_SENT: u64 = 0;
+    unsafe {
+        BYTES_SENT += 128;
+        LAST_TIME = match LAST_TIME {
+            Some(last_time) => {
+                let now = Instant::now();
+                let duration = now - last_time;
+                let nanos = duration.as_secs() * 1_000_000_000 + duration.subsec_nanos() as u64;
+                println!(
+                    "Progress: {} bytes sent at {:.2} KiB/s",
+                    BYTES_SENT,
+                    128.0 * 1_000_000_000.0 / 1024.0 / nanos as f64
+                );
+                Some(now)
+            }
+            None => Some(Instant::now()),
+        };
+    }
+}
+
 fn main() {
     use std::fs::File;
     use std::io::{self, BufReader, BufRead};
@@ -55,4 +78,48 @@ fn main() {
     let mut serial = serial::open(&opt.tty_path).expect("path points to invalid TTY");
 
     // FIXME: Implement the `ttywrite` utility.
+    let mut settings = serial.read_settings().expect("device should be valid");
+    settings
+        .set_baud_rate(opt.baud_rate)
+        .expect("baud rate should be valid");
+    settings.set_stop_bits(opt.stop_bits);
+    settings.set_flow_control(opt.flow_control);
+    settings.set_char_size(opt.char_width);
+    serial
+        .write_settings(&settings)
+        .expect("settings should be valid");
+    serial
+        .set_timeout(Duration::from_secs(opt.timeout))
+        .expect("timeout should be valid");
+
+    if opt.raw {
+        match opt.input {
+            Some(ref path) => {
+                let mut input = BufReader::new(File::open(path).expect("file should exist"));
+                io::copy(&mut input, &mut serial).expect("io transfer should succeed");
+            }
+            None => {
+                let mut input = io::stdin();
+                io::copy(&mut input, &mut serial).expect("io transfer should succeed");
+            }
+        };
+    } else {
+        // XMODEM
+        match opt.input {
+            Some(ref path) => {
+                let mut input = BufReader::new(File::open(path).expect("file should exist"));
+                match Xmodem::transmit_with_progress(input, &mut serial, progress_fn) {
+                    Ok(_) => return,
+                    Err(err) => panic!("Error: {:?}", err),
+                }
+            }
+            None => {
+                let mut input = io::stdin();
+                match Xmodem::transmit_with_progress(input, &mut serial, progress_fn) {
+                    Ok(_) => return,
+                    Err(err) => panic!("Error: {:?}", err),
+                }
+            }
+        }
+    }
 }

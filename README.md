@@ -22,28 +22,17 @@ Our own std lib. Some containers and protocals.
 ## 6. ttywrite
 The software which operates on linux host and send the kernel to Pi by uart.
 
-
+```
 +-------------+        +--------+    +----------+    +----------+
-
 | boot_loader |        | kernel |    | firmware |    | ttywrite |
-
 +-+-----------+        +------+-+    +----------+    +----------+
-
   ^                           ^
-
   |                           |
-
   |                           |
-
   |                           |
-
   |  +----------------------+ |
-
   |  | +----+       +-----+ | |
-
   +--+ | Pi +<------+ std | +-+
-
      | +----+       +-----+ |
-
      +----------------------+
-
+```

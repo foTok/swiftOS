@@ -1,7 +1,7 @@
+#![allow(clippy::all)]
 #![feature(uniform_paths)]
-#[macro_use] extern crate structopt_derive;
 
-mod xmodem;
+#[macro_use] extern crate structopt_derive;
 
 use std::time::Instant;
 use std::path::PathBuf;
@@ -12,13 +12,14 @@ use serial::core::{CharSize, BaudRate, StopBits, FlowControl, SerialDevice, Seri
 use xmodem::{Xmodem, Progress};
 
 mod parsers;
+mod xmodem;
 
 use parsers::{parse_width, parse_stop_bits, parse_flow_control, parse_baud_rate};
 
 #[derive(StructOpt, Debug)]
 #[structopt(about = "Write to TTY using the XMODEM protocol by default.")]
 struct Opt {
-    #[structopt(short = "i", help = "Input file (defaults to stdin if not set)", parse(from_os_str))]
+    #[structopt(short = "i", long = "input", help = "Input file (defaults to stdin if not set)", parse(from_os_str))]
     input: Option<PathBuf>,
 
     #[structopt(short = "b", long = "baud", parse(try_from_str = "parse_baud_rate"),
@@ -71,12 +72,16 @@ fn progress_fn(_progress: Progress) {
 }
 
 fn main() {
+    print!("Start main");
     use std::fs::File;
-    use std::io::{self, BufReader, BufRead};
+    use std::io::{self, BufReader};
 
+    print!("Obtain parameters");
     let opt = Opt::from_args();
+    print!("Open serial");
     let mut serial = serial::open(&opt.tty_path).expect("path points to invalid TTY");
 
+    print!("Settings");
     // FIXME: Implement the `ttywrite` utility.
     let mut settings = serial.read_settings().expect("device should be valid");
     settings
@@ -92,6 +97,7 @@ fn main() {
         .set_timeout(Duration::from_secs(opt.timeout))
         .expect("timeout should be valid");
 
+    print!("Prepare Transmit");
     if opt.raw {
         match opt.input {
             Some(ref path) => {

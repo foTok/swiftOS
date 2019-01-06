@@ -1,5 +1,5 @@
 SECTIONS {
-  . = 0x4000000;   /* Space for kernel.  */
+  . = 0x80000;   /* Space for kernel.  */
   __start = .;
   .text : {
     KEEP (*(.head))

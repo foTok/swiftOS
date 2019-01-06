@@ -1,3 +1,4 @@
+#![allow(clippy::all)]
 #![feature(asm)]
 #![no_builtins]
 #![feature(uniform_paths)]
@@ -5,10 +6,11 @@
 #![no_std]
 
 use core::panic::PanicInfo;
+use core::result::Result::{Ok, Err};
 use pi::timer;
 use pi::uart;
 use pi::gpio;
-use std::io::*;
+use std::xmodem::Xmodem;
 
 mod mem;
 
@@ -36,21 +38,16 @@ pub unsafe extern "C" fn kmain() {
     timer::spin_sleep_ms(10_000);
     gpio16.clear();
 
-    // open a uart to recieve new data
-    let mut shell_uart = uart::MiniUart::new();
-    // mem write
-    let mut mem_write = mem::MemWrite::new(BINARY_START_ADDR, BOOTLOADER_START_ADDR);
-
     loop {
-        shell_uart.wait_for_byte();
-        let r = shell_uart.read_byte();
-        match r{
-            Ok(byte) => { 
-                match shell_uart.write_byte(byte){
-                    _ => {}
-                }
-            },
-            Err(_) => continue,
+        // open a uart to recieve new data
+        let mini_uart = uart::MiniUart::new();
+        // mem write
+        let mem_write = mem::MemWrite::new(BINARY_START_ADDR, BOOTLOADER_START_ADDR);
+        // xmodem
+        mini_uart.wait_for_byte();
+        match Xmodem::receive(mini_uart, mem_write){
+            Ok(_) => jump_to(BINARY_START_ADDR as *mut u8),
+            Err(_) => {}
         }
     }
 }

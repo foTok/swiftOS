@@ -34,8 +34,8 @@ socat -u ${PARAMS},link=input ${PARAMS},link=output &
 sleep 1
 
 if [[ "$(uname)" = "Darwin" ]]; then
-  stty -F input min 0 time 1
-  stty -F output min 0 time 1
+  stty -f input min 0 time 1
+  stty -f output min 0 time 1
 else
   stty -F input min 0 time 1
   stty -F output min 0 time 1

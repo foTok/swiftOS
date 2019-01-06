@@ -250,7 +250,6 @@ impl<T:Read + Write> Xmodem<T> {
             return Ok(0);
         }
         else if read_byte_1!=SOH{
-            self.write_byte(CAN)?;
             return Err(ErrorKind::InvalidData);
         } // else, recieved SOH, do nothing.
         // 2. Read packet number

@@ -257,7 +257,6 @@ impl<T: io::Read + io::Write> Xmodem<T> {
             return Ok(0);
         }
         else if read_byte_1!=SOH{
-            // ?? self.write_byte(CAN)?;
             return Err(io::Error::new(io::ErrorKind::InvalidData, "Expect EOT or SOH"));
         } // else, recieved SOH, do nothing.
         // 2. Read packet number

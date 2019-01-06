@@ -34,20 +34,19 @@ pub unsafe extern "C" fn kmain() {
     // Turn on the light 10s to show that the Pi is ready.
     // Then turn off the light.
     let mut gpio16 = gpio::Gpio::new(16).into_output();
-    gpio16.set();
-    timer::spin_sleep_ms(10_000);
-    gpio16.clear();
-
     loop {
+        gpio16.set();
         // open a uart to recieve new data
-        let mini_uart = uart::MiniUart::new();
+        let mut mini_uart = uart::MiniUart::new();
+        mini_uart.set_read_timeout(750);
         // mem write
         let mem_write = mem::MemWrite::new(BINARY_START_ADDR, BOOTLOADER_START_ADDR);
         // xmodem
-        mini_uart.wait_for_byte();
         match Xmodem::receive(mini_uart, mem_write){
             Ok(_) => jump_to(BINARY_START_ADDR as *mut u8),
-            Err(_) => {}
+            Err(_) => {},
         }
+        gpio16.clear();
+        timer::spin_sleep_ms(1000);
     }
 }

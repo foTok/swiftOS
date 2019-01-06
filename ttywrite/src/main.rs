@@ -3,6 +3,7 @@
 
 #[macro_use] extern crate structopt_derive;
 
+use std::env;
 use std::time::Instant;
 use std::path::PathBuf;
 use std::time::Duration;
@@ -72,16 +73,12 @@ fn progress_fn(_progress: Progress) {
 }
 
 fn main() {
-    print!("Start main");
     use std::fs::File;
     use std::io::{self, BufReader};
 
-    print!("Obtain parameters");
     let opt = Opt::from_args();
-    print!("Open serial");
     let mut serial = serial::open(&opt.tty_path).expect("path points to invalid TTY");
 
-    print!("Settings");
     // FIXME: Implement the `ttywrite` utility.
     let mut settings = serial.read_settings().expect("device should be valid");
     settings
@@ -97,7 +94,6 @@ fn main() {
         .set_timeout(Duration::from_secs(opt.timeout))
         .expect("timeout should be valid");
 
-    print!("Prepare Transmit");
     if opt.raw {
         match opt.input {
             Some(ref path) => {

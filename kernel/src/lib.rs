@@ -4,19 +4,8 @@
 #![feature(optin_builtin_traits)]
 #![no_std]
 
-use core::panic::PanicInfo;
-use core::result::Result::{Ok, Err};
 use pi::timer;
-use pi::uart;
 use pi::gpio;
-
-mod mem;
-
-#[panic_handler]
-fn panic(_info: &PanicInfo) -> !{
-    loop {}
-}
-
 
 #[no_mangle]
 pub unsafe extern "C" fn kmain() {
@@ -30,5 +19,4 @@ pub unsafe extern "C" fn kmain() {
         gpio16.clear();
         timer::spin_sleep_ms(4000);
     }
-
 }

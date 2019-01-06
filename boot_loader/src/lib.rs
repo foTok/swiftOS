@@ -5,19 +5,12 @@
 #![feature(optin_builtin_traits)]
 #![no_std]
 
-use core::panic::PanicInfo;
 use core::result::Result::{Ok, Err};
 use pi::timer;
 use pi::uart;
 use pi::gpio;
+use std::mem;
 use std::xmodem::Xmodem;
-
-mod mem;
-
-#[panic_handler]
-fn panic(_info: &PanicInfo) -> !{
-    loop {}
-}
 
 const BINARY_START_ADDR: usize = 0x80000;
 const BOOTLOADER_START_ADDR: usize = 0x4000000;

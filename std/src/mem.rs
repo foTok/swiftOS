@@ -1,5 +1,5 @@
 /// The module to write byte into memory.
-use std::io::*;
+use crate::io::*;
 use core::result::Result;
 use core::result::Result::{Ok, Err};
 

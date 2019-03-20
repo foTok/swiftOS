@@ -1,6 +1,5 @@
 #![feature(asm)]
 #![no_builtins]
-#![feature(uniform_paths)]
 #![feature(optin_builtin_traits)]
 #![no_std]
 
@@ -9,8 +8,8 @@ use pi::gpio;
 
 #[no_mangle]
 pub unsafe extern "C" fn kmain() {
-    // Turn on the light 10s to show that the Pi is ready.
-    // Then turn off the light.
+    // Turn on the light 3 seconds to show that the Pi is ready.
+    // Then turn off the light 4 seconds.
     let mut gpio16 = gpio::Gpio::new(16).into_output();
 
     loop {

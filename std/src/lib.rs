@@ -1,4 +1,3 @@
-#![feature(uniform_paths)]
 #![feature(decl_macro)]
 #![feature(optin_builtin_traits)]
 #![no_std]
